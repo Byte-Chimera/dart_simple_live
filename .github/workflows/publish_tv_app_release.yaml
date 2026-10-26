@@ -25,14 +25,11 @@ jobs:
           java-version: "17"
           cache: "gradle"
 
-      # 3. 动态生成签名密钥并创建 key.properties
+      # 3. 动态生成签名密钥并写入 key.properties
       - name: Generate Keystore & key.properties
         run: |
-          mkdir -p simple_live_tv_app/android
-          KEYSTORE_PATH="$GITHUB_WORKSPACE/simple_live_tv_app/android/keystore.jks"
-          
-          # 使用 keytool 自动生成签名证书
-          keytool -genkey -v \
+          KEYSTORE_PATH="$GITHUB_WORKSPACE/keystore.jks"
+          keytool -genkeypair -v \
             -keystore "$KEYSTORE_PATH" \
             -alias "simplelive" \
             -keyalg RSA \
@@ -42,20 +39,16 @@ jobs:
             -keypass "12345678" \
             -dname "CN=SimpleLive, OU=Dev, O=SimpleLive, L=Default, S=Default, C=CN"
 
-          # 写入 Gradle 所需的 key.properties 配置文件
-          cat <<EOF > simple_live_tv_app/android/key.properties
-          storeFile=$KEYSTORE_PATH
-          storePassword=12345678
-          keyPassword=12345678
-          keyAlias=simplelive
-          EOF
+          echo "storeFile=$KEYSTORE_PATH" > simple_live_tv_app/android/key.properties
+          echo "storePassword=12345678" >> simple_live_tv_app/android/key.properties
+          echo "keyPassword=12345678" >> simple_live_tv_app/android/key.properties
+          echo "keyAlias=simplelive" >> simple_live_tv_app/android/key.properties
 
-      # 4. 设置 Flutter 环境
+      # 4. 设置 Flutter 环境（恢复为原项目的 3.38.x）
       - name: Flutter action
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.x"
-          channel: "stable"
+          flutter-version: "3.38.x"
           cache: true
 
       # 5. 更新 Flutter 依赖
